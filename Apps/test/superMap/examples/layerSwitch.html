@@ -1,0 +1,153 @@
+﻿<!DOCTYPE>
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+        <title>layerSwitch</title>
+        <style type="text/css">
+            body{
+                margin: 0;
+                overflow: hidden;
+                background: #fff;
+            }
+            #map{
+                position:relative;
+                height: 520px;
+                border:1px solid #3473b7;
+            }
+           #handle{
+               position:absolute;
+               height:100%;
+               width: 6px;
+               left: 50%;
+               background: rgb(205, 205, 205);
+               border:1px solid rgb(112, 107, 107);
+               z-index: 2000;
+               cursor:col-resize;
+
+           }
+            #handleCenter{
+                position:absolute;
+                height:32px;
+                width: 24px;
+                top: 50%;
+                left:-10px;
+                background: rgb(205, 205, 205);
+                border:1px solid rgb(112, 107, 107);
+                z-index: 2000;
+                background-image: url(images/drag.png);
+                background-position: center;
+                background-repeat: no-repeat;
+            }
+        </style>
+        <script src='../libs/SuperMap.Include.js'></script>
+        <script type="text/javascript">
+            var map, layer, positionLayer, lat, lon, geolocate,baseLayer, c, b,
+            host = document.location.toString().match(/file:\/\//)?"http://localhost:8090":'http://' + document.location.host,
+            url1=host+"/iserver/services/map-world/rest/maps/World";
+            url2=host+"/iserver/services/map-world/rest/maps/世界地图_Night";
+            function init(){
+                /*
+                 * 不支持canvas的浏览器不能运行该范例
+                 * android 设备也不能运行该范例*/
+                var broz = SuperMap.Util.getBrowser();
+
+                if(!document.createElement('canvas').getContext) {
+                    alert('您的浏览器不支持 canvas，请升级');
+                    return;
+                } else if (broz.device === 'android') {
+                    alert('您的设备不支持，请使用pc或其他设备');
+                    return;
+                }
+
+                map= new SuperMap.Map("map",{controls: [
+                    new SuperMap.Control.ScaleLine(),
+                    new SuperMap.Control.Zoom(),
+                    new SuperMap.Control.Navigation({
+                        dragPanOptions: {
+                            enableKinetic: true
+                        }
+                    })]
+                });
+                //图层相互叠加
+                map.allOverlays=true;
+                //初始化底图
+                baseLayer=new SuperMap.Layer.TiledDynamicRESTLayer("世界地图",url1,{transparent: false, cacheEnabled: true, redirect: true}, {maxResolution:"auto"});
+                baseLayer.isBaseLayer=true;
+                baseLayer.events.on({"layerInitialized": addLayer1});
+
+            }
+            function addLayer1() {
+                //初始化图层，此图层在最上层，做卷帘图层
+                layer = new SuperMap.Layer.TiledDynamicRESTLayer("世界地图_Night",url2, {transparent: false, cacheEnabled: true, redirect: true}, {maxResolution:"auto"});
+                layer.events.on({"layerInitialized": addLayer});
+            }
+
+            function addLayer() {
+                var center = new SuperMap.LonLat(11733502.481499,4614406.969325);
+                map.addLayers([baseLayer,layer]);
+                map.setCenter(center, 1);
+                //获取地图div的宽度
+               var mapwidth=map.size.w,
+                handle=document.getElementById("handle");
+                //初始化卷帘的位置
+                handle.style.left=mapwidth*0.5+"px";
+
+                clip(mapwidth*0.5);
+            }
+            //使图层显示范围随着卷帘的拖动而变化
+            function clip(left){
+                var mapTop="0px",
+                    mapRight=left+"px",
+                    mapButtom=map.size.h+"px",
+                    mapLeft="0px",
+                    rect="rect("+mapTop +","+mapRight+","+mapButtom+","+mapLeft+")";
+                layer.div.style.clip=rect;
+            }
+            //拖动卷帘
+            function drag(e){
+               var  objectDiv=document.getElementById("handle");
+                //取消事件的默认行为
+                e.preventDefault();
+                if(document.all)
+                {   //鼠标捕获
+                    objectDiv.setCapture();
+                }
+                b=e.clientX-parseInt(objectDiv.style.left);
+                //鼠标拖动
+                document.onmousemove=function (d){
+                    if(!d) d=event;
+                    c=(d.clientX-b);
+                    //使卷帘在地图内
+                    if(c>map.size.w-7){ c=map.size.w-7; }
+                    if(c<0){ c=0; }
+                    if(objectDiv)
+                    {
+                        objectDiv.style.left=c+"px";
+                        clip(c);
+                    }
+
+                };
+                //拖动完成后
+                document.onmouseup=function(){
+                    if(document.all)
+                    {
+                        //释放鼠标捕获
+                        objectDiv.releaseCapture();
+                    }
+                    objectDiv=null;
+
+                };
+            }
+
+
+        </script>
+    </head>
+    <body onload="init()">
+     <div id="map">
+         <div id="handle" title="通过拖动查看图层" onmousedown="drag(event)" >
+             <div id="handleCenter"></div>
+         </div>
+
+     </div>
+    </body>
+</html>

@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title></title>
+    <script type="text/javascript" src="../../ThirdParty/requirejs-2.1.9/require.js"></script>
+    <script type="text/javascript">
+        require.config({
+            baseUrl : '../../Source',
+            waitSeconds : 60
+        });
+        //测试是否可以传输typedArray ok
+        /*var worker = new Worker('testworker.js');
+        worker.postMessage = worker.webkitPostMessage || worker.postMessage;
+        var arr = new Int8Array([99]);
+        worker.postMessage({
+            array : arr
+        },[arr.buffer]);
+        worker.onmessage = function(event){
+            var arr = event.data.array;
+            var result = arr && arr[0] === 99;
+            if(result){
+                alert(123);
+            }
+        };*/
+        //测试时候可以传输对象
+        var worker = new Worker('testworker.js');
+        worker.postMessage = worker.webkitPostMessage || worker.postMessage;
+        var arr = new Int8Array([99]);
+        worker.postMessage({
+            value : 123
+        });
+        worker.onmessage = function(event){
+            var result = event.data;
+            alert(result.value);
+        };
+    </script>
+</head>
+<body>
+
+</body>
+</html>

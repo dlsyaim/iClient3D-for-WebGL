@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title></title>
+    
+    <script src="../libs/SuperMap.Include.js"></script>
+	
+    <script type="text/javascript">
+	
+		 var map, layer,
+              host = document.location.toString().match(/file:\/\//) ? "http://localhost:8090" : 'http://' + document.location.host;
+               url = host + "/iserver/services/map-china400/rest/maps/China";
+        function init(){
+            map = new SuperMap.Map("map",{controls:[
+                        new SuperMap.Control.Navigation() ,
+                       new SuperMap.Control.Zoom()
+            ]});
+            
+        }
+
+        function test(){
+             map = new SuperMap.Map("map",{controls:[
+                        new SuperMap.Control.Navigation() ,
+                       new SuperMap.Control.Zoom()
+            ]});
+            
+        }
+
+    </script>
+</head>
+<body onLoad = "init()">
+<button onclick="test()"></button>
+
+</body>
+
+</html>

@@ -73,23 +73,25 @@ define([
     /**
      * @private
      * 释放资源
-     * @param entityQueue 实体队列
+     * @param deleteQueue 实体队列
      * @param cacheEntityCount 缓存个数
      */
-        function releaseResource(entityQueue){
+        function releaseResource(deleteQueue,cacheCount){
             var destroy = function(pageLod){
                 if(pageLod && pageLod._renderEntity){
                     pageLod._renderEntity.destroy();
                     pageLod._renderEntity = null;
                 }
             };
-            entityQueue.sort(function(aEntity,bEntity){
-                return aEntity._avgPix - bEntity._avgPix;
+            deleteQueue.sort(function(apageLod,bpageLod){
+                return apageLod._entity._avgPix - bpageLod._entity._avgPix;
             });
-            var deleteEntity;
-            while((deleteEntity = entityQueue.dequeue())) {
+            var deletePagelod,deleteEntity;
+            while((deletePagelod = deleteQueue.dequeue()) && deleteQueue.length > cacheCount) {
+                deleteEntity = deletePagelod._entity;
                 deleteEntity.traverse(destroy);
                 deleteEntity._s3mLoadState = LOADSTATE.UNLOAD;
+                deletePagelod._entity = null;
             }
         };
     /**
@@ -315,7 +317,7 @@ define([
             this._version = undefined;
             this._matModel = new Matrix4();
             this._program = undefined;
-            this._cacheEntityCount = options.cacheEntityCount || 10;
+            this._cacheEntityCount = options.cacheEntityCount || 100;
             this._pixels = new Uint8Array(4);
             this._renderState = RenderState.fromCache({ // Write color and depth
                 cull : {
@@ -458,8 +460,8 @@ define([
                             if(intersect === Intersect.OUTSIDE){
                                 pageLod._renderEntity && this._renderQueue.push(pageLod._renderEntity);
                                 if(pageLod._entity){
-                                    deleteQueue.enqueue(pageLod._entity);
-                                    pageLod._entity = null;
+                                    deleteQueue.enqueue(pageLod);
+                                    //pageLod._entity = null;
                                 }
                             }
                             else{
@@ -495,8 +497,8 @@ define([
                                 else{
                                     pageLod._renderEntity && this._renderQueue.push(pageLod._renderEntity);
                                     if(pageLod._entity){
-                                        deleteQueue.enqueue(pageLod._entity);
-                                        pageLod._entity = null;
+                                        deleteQueue.enqueue(pageLod);
+                                        //pageLod._entity = null;
                                     }
                                 }
                             }
@@ -510,7 +512,8 @@ define([
                 while(loadEntity = loadQueue.dequeue()){
                     this.loadEntity(loadEntity);
                 }
-                releaseResource(deleteQueue);
+                var cacheCount = this._cacheEntityCount || 0;
+                releaseResource(deleteQueue,cacheCount);
             }
             for(var i = 0,j = this._renderQueue.length;i < j;i++){
                 commandList.push(this._renderQueue[i]._drawCommand);

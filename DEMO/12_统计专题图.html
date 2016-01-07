@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <title>统计专题图</title>
+    <script src="../Build/Cesium/Cesium.js"></script>
+    <style>
+        @import url(../Build/Cesium/Widgets/widgets.css);
+        html, body, #cesiumContainer {
+            width: 100%; height: 100%; margin: 0; padding: 0; overflow: hidden;
+        }
+    </style>
+</head>
+<body>
+<div id="cesiumContainer"></div>
+<script>
+    var dataSource = new Cesium.StatisticsDataSource();
+    function loadJson(){
+        dataSource.loadUrl('./SampleData/population909500.json').then(function() {
+            function createSeriesSetter(seriesName) {
+                return function() {
+                    dataSource.seriesToDisplay = seriesName;
+                };
+            }
+            for (var i = 0; i < dataSource.seriesNames.length; i++) {
+                var seriesName = dataSource.seriesNames[i];
+                Sandcastle.addToolbarButton(seriesName, createSeriesSetter(seriesName));
+            }
+        });
+    }
+    function loadArray(){
+        var promise = Cesium.loadJson('./SampleData/capitals.json');
+        Cesium.when(promise,function(data){
+            var recordsets = data.recordsets;
+            var i,j;
+            var dataarr = [];
+            for (i=0; i<recordsets.length; i++) {
+                var features = recordsets[i].features;
+                if (features) {
+                    for (j=0; j<features.length; j++) {
+                        var feature = features[j];
+                        var values = feature.fieldValues;
+                        var lon = values[2];
+                        var lat = values[1];
+                        var poplation = values[10];
+                        dataarr.push(lon);
+                        dataarr.push(lat);
+                        dataarr.push(poplation/100000000);
+                    }
+                }
+            }
+            dataSource.loadArrayData(dataarr,{
+                beginColor : new Cesium.Color(0,1,1,1),
+                endColor : new Cesium.Color(1,0,0,1),
+                width : 4
+            });
+        });
+    }
+    var viewer = new Cesium.Viewer('cesiumContainer');
+    loadArray();
+    viewer.clock.shouldAnimate = false;
+    viewer.dataSources.add(dataSource);
+</script>
+</body>
+</html>

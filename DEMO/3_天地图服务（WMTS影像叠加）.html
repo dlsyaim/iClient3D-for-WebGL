@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <title>天地图影像叠加WMTS</title>
+    <script src="../Build/Cesium/Cesium.js"></script>
+    <style>
+        @import url(../Build/Cesium/Widgets/widgets.css);
+        html, body, #cesiumContainer {
+            width: 100%; height: 100%; margin: 0; padding: 0; overflow: hidden;
+        }
+    </style>
+</head>
+<body>
+<div id="cesiumContainer"></div>
+<script>
+    var viewer = new Cesium.Viewer('cesiumContainer', {
+        imageryProvider : new Cesium.WebMapTileServiceImageryProvider({
+            url : 'http://[subdomain].tianditu.com/img_w/wmts',
+            layer : 'img',
+            style : 'default',
+            format : 'tiles',
+            tileMatrixSetID : 'w',
+            credit : new Cesium.Credit('天地图全球影像服务'),
+            subdomains : ['t0','t1','t2','t3','t4','t5','t6','t7'],
+            maximumLevel : 18
+        })
+    });
+    var imageryLayers = viewer.imageryLayers;
+    var labelImagery = new Cesium.WebMapTileServiceImageryProvider({
+        url : 'http://[subdomain].tianditu.com/cia_w/wmts',
+        layer : 'cia',
+        style : 'default',
+        format : 'tiles',
+        tileMatrixSetID : 'w',
+        credit : new Cesium.Credit('天地图全球影像中文注记服务'),
+        subdomains : ['t0','t1','t2','t3','t4','t5','t6','t7']
+    });
+    imageryLayers.addImageryProvider(labelImagery);
+</script>
+</body>
+</html>

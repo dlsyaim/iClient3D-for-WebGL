@@ -60,7 +60,7 @@ define([
         './TweenCollection',
         '../Osgb/OsgbLayer',
         '../ThirdParty/when',
-        '../Core/loadXml',
+        '../Core/loadXML',
         '../ThirdParty/Uri',
         '../Core/EasingFunction'
     ], function(

@@ -33,3 +33,5 @@ SuperMap iClient 3D for WebGL 一款在服务式 GIS 架构体系中， 面向 H
 5 绘制+缓冲区分析
  ![image](https://github.com/SuperMap/iClient3D-for-WebGL/raw/master/images/5buffer.png)
  
+## 许可
+	本产品基于Cesium开源项目，遵循MIT许可

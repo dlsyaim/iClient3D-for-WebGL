@@ -2346,12 +2346,17 @@ define([
         var camera = this.camera;
         var that = this;
         when(loadXml(url),function(doc){
+            loadXml(url);
             var position = doc.getElementsByTagName("Position")[0];
             var x = position.getElementsByTagName('X')[0].textContent;
             var y = position.getElementsByTagName('Y')[0].textContent;
             var z = position.getElementsByTagName('Z')[0].textContent;
             position = [x,y,z];
-            var osgFiles = doc.getElementsByTagName("FileName");
+            var parent = doc.getElementsByTagName('OSGFiles')[0];
+            if(!defined(parent)){
+                throw new DeveloperError('scp file OSGFiles node is required!');
+            }
+            var osgFiles = parent.getElementsByTagName("FileName");
             var urls = [];
             var servers = [];
             var serverPath = doc.URL;
@@ -2368,10 +2373,20 @@ define([
             for(var i = 0,j = osgFiles.length;i < j;i++){
                 var osgFile = osgFiles[i];
                 var value = osgFile.textContent;
+                value = value.replace(new RegExp("\/","gm"),"\\");
                 var strs = value.split("\\");
-                var fileName = strs[1];
-                fileName = fileName.replace(new RegExp(/[+-]+/g),'');
-                urls.push(serverPath + '/path/' + fileName + "/" + fileName + '.xml');
+                if(strs.length >= 2){
+                    var fileName;
+                    if(strs[0] === '.'){
+                        fileName = strs[1];
+
+                    }
+                    else{
+                        var fileName = strs[0];
+                    }
+                    fileName = fileName.replace(new RegExp(/[+-]+/g),'');
+                    urls.push(serverPath + '/path/' + fileName + "/" + fileName + '.xml');
+                }
             }
             return {
                 gl : gl,

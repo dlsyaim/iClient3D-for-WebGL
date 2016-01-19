@@ -2,6 +2,14 @@
 (function() {
 "use strict";
 /*jshint sub:true*/
+define('Convert/cesiumToSuperMap', function() {
+    return Cesium['cesiumToSuperMap'];
+});
+
+define('Convert/supermapToCesium', function() {
+    return Cesium['supermapToCesium'];
+});
+
 define('Core/ArcGisImageServerTerrainProvider', function() {
     return Cesium['ArcGisImageServerTerrainProvider'];
 });
@@ -1132,6 +1140,14 @@ define('DataSources/createRawPropertyDescriptor', function() {
 
 define('DataSources/dynamicGeometryGetBoundingSphere', function() {
     return Cesium['dynamicGeometryGetBoundingSphere'];
+});
+
+define('Handler/PolygonHandler', function() {
+    return Cesium['PolygonHandler'];
+});
+
+define('Handler/PolylineHandler', function() {
+    return Cesium['PolylineHandler'];
 });
 
 define('Osgb/DDSTexture', function() {

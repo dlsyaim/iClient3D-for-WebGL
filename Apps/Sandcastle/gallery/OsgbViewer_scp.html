@@ -23,18 +23,23 @@
 <div id="cesiumContainer" class="fullSize"></div>
 <div id="loadingOverlay"><h1>Loading...</h1></div>
 <div id="toolbar"></div>
+<div style="position: absolute;">
+    <button onclick="addOsgb();">add</button>
+</div>
 <script id="cesium_sandcastle_script">
+    function addOsgb(){
+        viewer.scene.addOsbgLayerByScp('http://localhost:8090/iserver/services/3D-zj/rest/realspace/datas/zj/config');
+    }
+    var viewer;
     function startup(Cesium) {
         "use strict";
-        var viewer = new Cesium.Viewer('cesiumContainer',{
+        viewer = new Cesium.Viewer('cesiumContainer',{
             imageryProvider : new Cesium.GoogleEarthImageryProvider({
                 url : 'http://khm1.google.com/kh/v=189',
                 channel : 1008
             })
         });
         var scene = viewer.scene;
-        //scene.addOsbgLayerByScp('http://localhost:8090/iserver/services/3D-srsb2/rest/realspace/datas/SRSB/config');
-        scene.addOsbgLayerByScp('http://localhost:8090/iserver/services/3D-zj/rest/realspace/datas/zj/config');
         Sandcastle.finishedLoading();
     }
     if (typeof Cesium !== "undefined") {

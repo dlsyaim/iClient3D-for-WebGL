@@ -71,7 +71,7 @@ var gallery_demos = [{
   "img": "Geometry and Appearances.jpg"
 }, {
   "name": "Hello World",
-  "date": 1451983570619,
+  "date": 1453189662553,
   "img": "Hello World.jpg"
 }, {
   "name": "Imagery Adjustment",
@@ -110,7 +110,7 @@ var gallery_demos = [{
   "date": 1452134489711
 }, {
   "name": "OsgbViewer_scp",
-  "date": 1451271330425
+  "date": 1452741330433
 }, {
   "name": "Picking",
   "date": 1450083383010,
@@ -121,7 +121,7 @@ var gallery_demos = [{
   "img": "Points.jpg"
 }, {
   "name": "Polygon",
-  "date": 1450083383097,
+  "date": 1452656794788,
   "img": "Polygon.jpg"
 }, {
   "name": "Polyline Volume",
@@ -168,162 +168,14 @@ var gallery_demos = [{
   "name": "capatialsLabelFromiServer",
   "date": 1450083382955
 }, {
-  "name": "development/3D Models",
-  "date": 1450083383275,
-  "img": "development/3D Models.jpg"
-}, {
-  "name": "development/BillboardClampToGround",
-  "date": 1450083383399
-}, {
-  "name": "development/Billboards",
-  "date": 1450083383217,
-  "img": "development/Billboards.jpg"
-}, {
-  "name": "development/Box Outline",
-  "date": 1450083383188,
-  "img": "development/Box Outline.jpg"
-}, {
-  "name": "development/Box",
-  "date": 1450083383245,
-  "img": "development/Box.jpg"
-}, {
-  "name": "development/Circle Outline",
-  "date": 1450083383333,
-  "img": "development/Circle Outline.jpg"
-}, {
-  "name": "development/Circle",
-  "date": 1450083383435,
-  "img": "development/Circle.jpg"
-}, {
-  "name": "development/Corridor Outline",
-  "date": 1450083383167,
-  "img": "development/Corridor Outline.jpg"
-}, {
-  "name": "development/Corridor",
-  "date": 1450083383232,
-  "img": "development/Corridor.jpg"
-}, {
-  "name": "development/Cylinder Outline",
-  "date": 1450083383203,
-  "img": "development/Cylinder Outline.jpg"
-}, {
-  "name": "development/Cylinder",
-  "date": 1450083383272,
-  "img": "development/Cylinder.jpg"
-}, {
-  "name": "development/Ellipse Outline",
-  "date": 1450083383407,
-  "img": "development/Ellipse Outline.jpg"
-}, {
-  "name": "development/Ellipse",
-  "date": 1450083383197,
-  "img": "development/Ellipse.jpg"
-}, {
-  "name": "development/Ellipsoid Outline",
-  "date": 1450083383307,
-  "img": "development/Ellipsoid Outline.jpg"
-}, {
-  "name": "development/Ellipsoid Surface",
-  "date": 1450083383250,
-  "img": "development/Ellipsoid Surface.jpg"
-}, {
-  "name": "development/Ellipsoid",
-  "date": 1450083383393,
-  "img": "development/Ellipsoid.jpg"
-}, {
-  "name": "development/Geometry and Appearances",
-  "date": 1450083383165,
-  "img": "development/Geometry and Appearances.jpg"
-}, {
-  "name": "development/Ground Primitive",
-  "date": 1450083383243
-}, {
-  "name": "development/Labels",
-  "date": 1450083383257,
-  "img": "development/Labels.jpg"
-}, {
-  "name": "development/Material",
-  "date": 1450083383319,
-  "img": "development/Material.jpg"
-}, {
-  "name": "development/Per Instance Color",
-  "date": 1450083383452,
-  "img": "development/Per Instance Color.jpg"
-}, {
-  "name": "development/PointPrimitives",
-  "date": 1450083383358,
-  "img": "development/PointPrimitives.jpg"
-}, {
-  "name": "development/Polygon Outline",
-  "date": 1450083383240,
-  "img": "development/Polygon Outline.jpg"
-}, {
-  "name": "development/Polygon",
-  "date": 1450083383316,
-  "img": "development/Polygon.jpg"
-}, {
-  "name": "development/Polygons",
-  "date": 1450083383208,
-  "img": "development/Polygons.jpg"
-}, {
-  "name": "development/Polyline Color",
-  "date": 1450083383193,
-  "img": "development/Polyline Color.jpg"
-}, {
-  "name": "development/Polyline Material",
-  "date": 1450083383449,
-  "img": "development/Polyline Material.jpg"
-}, {
-  "name": "development/Polyline Volume Outline",
-  "date": 1450083383219,
-  "img": "development/Polyline Volume Outline.jpg"
-}, {
-  "name": "development/Polyline Volume",
-  "date": 1450083383304,
-  "img": "development/Polyline Volume.jpg"
-}, {
-  "name": "development/Polyline",
-  "date": 1450083383195,
-  "img": "development/Polyline.jpg"
-}, {
-  "name": "development/Polylines",
-  "date": 1450083383387,
-  "img": "development/Polylines.jpg"
-}, {
-  "name": "development/Rectangle Outline",
-  "date": 1450083383259,
-  "img": "development/Rectangle Outline.jpg"
-}, {
-  "name": "development/Rectangle",
-  "date": 1450083383355,
-  "img": "development/Rectangle.jpg"
-}, {
-  "name": "development/Simple Polyline",
-  "date": 1450083383360,
-  "img": "development/Simple Polyline.jpg"
-}, {
-  "name": "development/Sphere Outline",
-  "date": 1450083383185,
-  "img": "development/Sphere Outline.jpg"
-}, {
-  "name": "development/Sphere",
-  "date": 1450083383238,
-  "img": "development/Sphere.jpg"
-}, {
-  "name": "development/Volumes",
-  "date": 1450083383401,
-  "img": "development/Volumes.jpg"
-}, {
-  "name": "development/Wall Outline",
-  "date": 1450083383328,
-  "img": "development/Wall Outline.jpg"
-}, {
-  "name": "development/Wall",
-  "date": 1450083383418,
-  "img": "development/Wall.jpg"
+  "name": "drawGeometry",
+  "date": 1452655738163
 }, {
   "name": "geometry转换",
   "date": 1451980293930
+}, {
+  "name": "缓冲区分析",
+  "date": 1452672148269
 }, {
   "name": "路径导航",
   "date": 1450859684680

@@ -2,6 +2,8 @@
 define(function() {
     "use strict";
     return {
+        'Convert/cesiumToSuperMap' : '../Stubs/Cesium',
+        'Convert/supermapToCesium' : '../Stubs/Cesium',
         'Core/ArcGisImageServerTerrainProvider' : '../Stubs/Cesium',
         'Core/AssociativeArray' : '../Stubs/Cesium',
         'Core/AttributeCompression' : '../Stubs/Cesium',
@@ -285,6 +287,8 @@ define(function() {
         'DataSources/createPropertyDescriptor' : '../Stubs/Cesium',
         'DataSources/createRawPropertyDescriptor' : '../Stubs/Cesium',
         'DataSources/dynamicGeometryGetBoundingSphere' : '../Stubs/Cesium',
+        'Handler/PolygonHandler' : '../Stubs/Cesium',
+        'Handler/PolylineHandler' : '../Stubs/Cesium',
         'Osgb/DDSTexture' : '../Stubs/Cesium',
         'Osgb/OsgbLayer' : '../Stubs/Cesium',
         'Renderer/AutomaticUniforms' : '../Stubs/Cesium',

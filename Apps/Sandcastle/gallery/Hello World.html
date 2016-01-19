@@ -28,11 +28,14 @@ function startup(Cesium) {
     "use strict";
 //Sandcastle_Begin
     var viewer = new Cesium.Viewer('cesiumContainer',{
-    imageryProvider : new Cesium.GoogleEarthImageryProvider({
+    /*imageryProvider : new Cesium.GoogleEarthImageryProvider({
         url : 'http://khm1.google.com/kh/v=189',
         channel : 1008
+    }),*/
+    /*imageryProvider : new Cesium.SingleTileImageryProvider({
+        url : '../../SampleData/GlobalBkLayer.jpg'
     }),
-    geocoder : true
+    geocoder : true*/
 });
 //Sandcastle_End
     Sandcastle.finishedLoading();

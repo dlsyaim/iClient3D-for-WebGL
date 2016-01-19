@@ -557,8 +557,8 @@ define([
                     pageLod.renderEntity.destroy();
                 }
             };
-            for(var i = 0,j = this.m_arrUpdateRootEntityPagedLOD.length;i < j;i++){
-                var entity = this.m_arrUpdateRootEntityPagedLOD[i];
+            for(var i = 0,j = this._rootEntitys.length;i < j;i++){
+                var entity = this._rootEntitys[i];
                 entity && entity.traverse(destroyCallBack);
             }
         };

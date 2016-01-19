@@ -296,7 +296,7 @@ define([
         this._zoomFactor = 5.0;
         this._rotateFactor = undefined;
         this._rotateRateRangeAdjustment = undefined;
-        this._maximumRotateRate = 1.77;
+        this._maximumRotateRate = 0.618;
         this._minimumRotateRate = 1.0 / 5000.0;
         this._translateFactor = 1.0;
         this._minimumZoomRate = 20.0;
@@ -1291,7 +1291,7 @@ define([
         }
 
         if (!rotateOnlyHorizontal) {
-            camera.rotateUp(deltaTheta);
+            camera.rotateUp(-deltaTheta);
         }
 
         camera.constrainedAxis = oldAxis;
@@ -1617,7 +1617,8 @@ define([
 
         camera._setTransform(verticalTransform);
 
-        if (dot < 0.0) {
+        if (dot > 0.0)
+        {
             if (movement.startPosition.y > movement.endPosition.y) {
                 constrainedAxis = undefined;
             }

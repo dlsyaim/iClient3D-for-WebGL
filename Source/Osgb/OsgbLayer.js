@@ -2,6 +2,7 @@
  * Created by bcj on 2015/9/28.
  */
 define([
+    '../Core/defined',
     '../Core/BoundingSphere',
     '../Core/Cartesian3',
     './DDSTexture',
@@ -24,8 +25,9 @@ define([
     '../Core/defineProperties',
     '../Core/Queue',
     '../Core/DeveloperError',
-    '../Core/Cartographic'
-    ],function(BoundingSphere,Cartesian3,DDSTexture,Matrix4,CesiumMath,Matrix3,Quaternion,Cartesian4,Transforms,RenderState,DepthFunction,when,DrawCommand,Pass,loadXML,loadArrayBuffer,throttleRequestByServer,Intersect,Uri,defineProperties,Queue,DeveloperError,Cartographic){
+    '../Core/Cartographic' ,
+    '../Core/TaskProcessor'
+    ],function(defined,BoundingSphere,Cartesian3,DDSTexture,Matrix4,CesiumMath,Matrix3,Quaternion,Cartesian4,Transforms,RenderState,DepthFunction,when,DrawCommand,Pass,loadXML,loadArrayBuffer,throttleRequestByServer,Intersect,Uri,defineProperties,Queue,DeveloperError,Cartographic,TaskProcessor){
         "use strict";
     /**
      * @private
@@ -364,6 +366,9 @@ define([
                 }
             }
         });
+
+        var taskProcessor = new TaskProcessor('osgbParser',10000);
+
         OsgbLayer.prototype.loadEntity = function(entity){
             var _this = this;
             var s3mLoadState = entity._s3mLoadState;
@@ -374,8 +379,8 @@ define([
                 var promise = loadS3m(s3mUrl);
                 if(promise){
                     promise.then(function(buffer){
-                        entity._s3mLoadState = LOADSTATE.LOADED;
-                        binaryDataParser(_this,entity,buffer);
+
+                        binaryDataParser(_this,entity,buffer,RenderEntityPagedLOD);
                     },function(error){
                         entity._s3mLoadState = LOADSTATE.UNLOAD;
                     });
@@ -413,8 +418,7 @@ define([
                     var promise = loadS3m(s3mUrl);
                     if(promise){
                         promise.then(function(buffer){
-                            rootEntity._s3mLoadState = LOADSTATE.LOADED;
-                            binaryDataParser(_this,rootEntity,buffer);
+                            binaryDataParser(_this,rootEntity,buffer,RenderEntityPagedLOD);
                         });
                         rootEntity._s3mLoadState = LOADSTATE.LOADING;
                     }
@@ -667,66 +671,143 @@ define([
             }
             return null;
         }
-        function binaryDataParser(osglayer,pEntity,data)
+
+        function binaryDataParser(osglayer,pEntity,data,RenderEntityPagedLOD)
         {
-            var header = new Uint8Array(data);
-            if (header[0] != 115 || header[1] != 51 || header[2] != 109) {
-                return false;
+            var osgPromise = taskProcessor.scheduleTask({
+                dataBuffer : data
+            });
+
+            if (!defined(osgPromise)) {
+                // Postponed
+                return undefined;
             }
-            var version = header[3];
-            osglayer._version = version;
-            var gl = osglayer._gl;
-            if(!gl){
-                return;
-            }
-            var aCount =  new Uint32Array(data,0,2);
-            var nPageCount = aCount[1];
-            var ab =  new Uint32Array(data,0,2+nPageCount*6);
-            if(pEntity._childrenPageLod.length == nPageCount){
-                for(var i = 0;i < nPageCount;i++){
-                    var pageLod = pEntity._childrenPageLod[i];
-                    var nBeginPos = i*6+2;
-                    var nOffset = ab[nBeginPos];
-                    var nIndexCount = ab[nBeginPos+1];
-                    var nVertexCount = ab[nBeginPos+2];
-                    var width = ab[nBeginPos+3];
-                    var height = ab[nBeginPos+4];
-                    var size = ab[nBeginPos+5];
-                    if(nIndexCount == 0){
-                        console.log('nindexcount == 0');
-                        pageLod._rangeList = Infinity;//表示这块区域下面没有数据了，是一块无效区域,无需再继续往下遍历
-                        continue;
+
+            osgPromise.then(function(result){
+                if(result.result)
+                {
+                    pEntity._s3mLoadState = LOADSTATE.LOADED;
+
+                    osglayer._version = result.version;
+                    var gl = osglayer._gl;
+                    if(!gl){
+                        pEntity._s3mLoadState = LOADSTATE.UNLOAD;
+                        return;
                     }
-                    var indexes = new Uint16Array(data,nOffset,nIndexCount);
-                    nOffset = nOffset + nIndexCount * 2;
-                    if(nIndexCount%2 == 1)
-                        nOffset += 2;
-                    var nSecondColorSize = 0;
-                    if(VERSION.S3M4 == version)
-                        nSecondColorSize = 4;
-                    var vertexes = new Float32Array(data,nOffset,nVertexCount*(5+nSecondColorSize));
-                    nOffset = nOffset + nVertexCount*(5+nSecondColorSize)*4;
-                    var pImageBuffer;
-                    pImageBuffer = new Uint8Array(data,nOffset,width*height/2);
-                    var texture = new DDSTexture(gl,width, height, pImageBuffer);
-                    var renderEntity = new RenderEntityPagedLOD({
-                        gl : gl,
-                        texture : texture,
-                        indexes : indexes,
-                        vertexes : vertexes,
-                        indexCount : nIndexCount,
-                        version : version,
-                        size : version == VERSION.S3M4 ? 9 : 5
-                    });
-                    renderEntity._drawCommand = new DrawCommand({
-                        boundingVolume : pageLod._boundingSphere,
-                        pass : Pass.OSGB,
-                        owner : renderEntity
-                    });
-                    pageLod._renderEntity = renderEntity;
+
+                    var nPageCount = result.number;
+                    if(pEntity._childrenPageLod.length == nPageCount)
+                    {
+                        for(var i = 0;i < nPageCount;i++)
+                        {
+                            var pageLod = pEntity._childrenPageLod[i];
+
+                            var vbo = result.vbo[i];
+                            var nIndexCount = vbo.indexCount;
+                            if(nIndexCount == 0){
+                                console.log('nindexcount == 0');
+                                pageLod._rangeList = Infinity;//表示这块区域下面没有数据了，是一块无效区域,无需再继续往下遍历
+                                continue;
+                            }
+
+                            var indexes = vbo.indexData;
+                            var vertexes = vbo.vertexData;
+
+                            var width = vbo.nWidth;
+                            var height = vbo.nHeight;
+                            var pImageBuffer = vbo.imageData;
+                            var texture = new DDSTexture(gl,width, height, pImageBuffer);
+
+                            var renderEntity = new RenderEntityPagedLOD({
+                                gl : gl,
+                                texture : texture,
+                                indexes : indexes,
+                                vertexes : vertexes,
+                                indexCount : nIndexCount,
+                                version : result.version,
+                                size : result.version == 53 ? 9 : 5
+                            });
+                            renderEntity._drawCommand = new DrawCommand({
+                                boundingVolume : pageLod._boundingSphere,
+                                pass : Pass.OSGB,
+                                owner : renderEntity
+                            });
+                            pageLod._renderEntity = renderEntity;
+                        }
+
+                        pEntity._ready = true;
+                    }
+
                 }
-                pEntity._ready = true;
-            }
+                else
+                {
+                    pEntity._s3mLoadState = LOADSTATE.UNLOAD;
+                }
+            });
+//            when(osgPromise, function(result) {
+//
+//
+//
+//            });
+
+//            var header = new Uint8Array(data);
+//            if (header[0] != 115 || header[1] != 51 || header[2] != 109) {
+//                return false;
+//            }
+//            var version = header[3];
+//            osglayer._version = version;
+//            var gl = osglayer._gl;
+//            if(!gl){
+//                return;
+//            }
+//            var aCount =  new Uint32Array(data,0,2);
+//            var nPageCount = aCount[1];
+//            var ab =  new Uint32Array(data,0,2+nPageCount*6);
+//            if(pEntity._childrenPageLod.length == nPageCount){
+//                for(var i = 0;i < nPageCount;i++){
+//                    var pageLod = pEntity._childrenPageLod[i];
+//                    var nBeginPos = i*6+2;
+//                    var nOffset = ab[nBeginPos];
+//                    var nIndexCount = ab[nBeginPos+1];
+//                    var nVertexCount = ab[nBeginPos+2];
+//                    var width = ab[nBeginPos+3];
+//                    var height = ab[nBeginPos+4];
+//                    var size = ab[nBeginPos+5];
+//                    if(nIndexCount == 0){
+//                        console.log('nindexcount == 0');
+//                        pageLod._rangeList = Infinity;//表示这块区域下面没有数据了，是一块无效区域,无需再继续往下遍历
+//                        continue;
+//                    }
+//                    var indexes = new Uint16Array(data,nOffset,nIndexCount);
+//                    nOffset = nOffset + nIndexCount * 2;
+//                    if(nIndexCount%2 == 1)
+//                        nOffset += 2;
+//                    var nSecondColorSize = 0;
+//                    if(VERSION.S3M4 == version)
+//                        nSecondColorSize = 4;
+//                    var vertexes = new Float32Array(data,nOffset,nVertexCount*(5+nSecondColorSize));
+//                    nOffset = nOffset + nVertexCount*(5+nSecondColorSize)*4;
+//                    var pImageBuffer;
+//                    pImageBuffer = new Uint8Array(data,nOffset,width*height/2);
+//                    var texture = new DDSTexture(gl,width, height, pImageBuffer);
+//                    var renderEntity = new RenderEntityPagedLOD({
+//                        gl : gl,
+//                        texture : texture,
+//                        indexes : indexes,
+//                        vertexes : vertexes,
+//                        indexCount : nIndexCount,
+//                        version : version,
+//                        size : version == VERSION.S3M4 ? 9 : 5
+//                    });
+//                    renderEntity._drawCommand = new DrawCommand({
+//                        boundingVolume : pageLod._boundingSphere,
+//                        pass : Pass.OSGB,
+//                        owner : renderEntity
+//                    });
+//                    pageLod._renderEntity = renderEntity;
+//                }
+//                pEntity._ready = true;
+//            }
         };
     OsgbLayer.prototype.initShader = function(){
         var srcVertex= [

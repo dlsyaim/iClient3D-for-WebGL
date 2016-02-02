@@ -2308,8 +2308,8 @@ define([
                 throw new DeveloperError('osgbData format is error.');
             }
             if(this.osgbLayer){
-                this.osgbLayer.destroySelf();
-                this.osgbLayer = null;
+                this.osgbLayer.destroy();
+                this.osgbLayer = undefined;
             }
             var servers = osgbData.servers;
             var urls = osgbData.urls;
@@ -2340,23 +2340,35 @@ define([
             throw new DeveloperError('scp url is required!');
         }
         if(this.osgbLayer){
-            this.osgbLayer.destroySelf();
-            this.osgbLayer = null;
-        }
+         this.osgbLayer.destroy();
+         this.osgbLayer = undefined;
+         }
         var camera = this.camera;
         var that = this;
-        when(loadXml(url),function(doc){
+        return when(loadXml(url),function(doc){
             loadXml(url);
-            var position = doc.getElementsByTagName("Position")[0];
-            var x = position.getElementsByTagName('X')[0].textContent;
-            var y = position.getElementsByTagName('Y')[0].textContent;
-            var z = position.getElementsByTagName('Z')[0].textContent;
-            position = [x,y,z];
-            var parent = doc.getElementsByTagName('OSGFiles')[0];
-            if(!defined(parent)){
+            var posTag = doc.getElementsByTagName("Position")[0] || doc.getElementsByTagName("sml:Position")[0];
+            if(!defined(posTag)){
+                throw new DeveloperError('scp file position tag node is required!');
+            }
+            var xTag = posTag.getElementsByTagName('X')[0] || posTag.getElementsByTagName('sml:X')[0];
+            var yTag = posTag.getElementsByTagName('Y')[0] || posTag.getElementsByTagName('sml:Y')[0];
+            var zTag = posTag.getElementsByTagName('Z')[0] || posTag.getElementsByTagName('sml:Z')[0];
+            var x = xTag.textContent;
+            var y = yTag.textContent;
+            var z = zTag.textContent;
+            var position = [x,y,z];
+            var parentTag = doc.getElementsByTagName('OSGFiles')[0] || doc.getElementsByTagName('sml:OSGFiles')[0];
+            if(!defined(parentTag)){
                 throw new DeveloperError('scp file OSGFiles node is required!');
             }
-            var osgFiles = parent.getElementsByTagName("FileName");
+            //var osgFiles = parentTag.getElementsByTagName("FileName") || parentTag.getElementsByTagName("sml:FileName");
+            var isIE = false;
+            var osgFiles = parentTag.children;
+            if(!defined(osgFiles)){//ie
+                osgFiles = parentTag.childNodes;
+                isIE = true;
+            }
             var urls = [];
             var servers = [];
             var serverPath = doc.URL;
@@ -2370,48 +2382,72 @@ define([
             }
             servers.push(uri.scheme + "://" + server);
             var gl = that._context._gl;
-            for(var i = 0,j = osgFiles.length;i < j;i++){
-                var osgFile = osgFiles[i];
-                var value = osgFile.textContent;
-                value = value.replace(new RegExp("\/","gm"),"\\");
-                var strs = value.split("\\");
-                if(strs.length >= 2){
-                    var fileName;
-                    if(strs[0] === '.'){
-                        fileName = strs[1];
+            if(isIE){
+                serverPath = url.replace("config","data");;
+                for(var i = 1,j = osgFiles.length;i < j;i += 2){
+                    var osgFile = osgFiles[i];
+                    var value = osgFile.textContent;
+                    value = value.replace(new RegExp("\/","gm"),"\\");
+                    var strs = value.split("\\");
+                    if(strs.length >= 2){
+                        var fileName;
+                        if(strs[0] === '.'){
+                            fileName = strs[1];
 
+                        }
+                        else{
+                            var fileName = strs[0];
+                        }
+                        fileName = fileName.replace(new RegExp(/[+-]+/g),'');
+                        urls.push(serverPath + '/path/' + fileName + "/" + fileName + '.xml');
                     }
-                    else{
-                        var fileName = strs[0];
-                    }
-                    fileName = fileName.replace(new RegExp(/[+-]+/g),'');
-                    urls.push(serverPath + '/path/' + fileName + "/" + fileName + '.xml');
                 }
             }
-            return {
+            else{
+                for(var i = 0,j = osgFiles.length;i < j;i++){
+                    var osgFile = osgFiles[i];
+                    var value = osgFile.textContent;
+                    value = value.replace(new RegExp("\/","gm"),"\\");
+                    var strs = value.split("\\");
+                    if(strs.length >= 2){
+                        var fileName;
+                        if(strs[0] === '.'){
+                            fileName = strs[1];
+
+                        }
+                        else{
+                            var fileName = strs[0];
+                        }
+                        fileName = fileName.replace(new RegExp(/[+-]+/g),'');
+                        urls.push(serverPath + '/path/' + fileName + "/" + fileName + '.xml');
+                    }
+                }
+            }
+
+            var pars = {
                 gl : gl,
                 servers : servers,
                 urls : urls,
                 position : position
             };
-        }).then(function(pars){
-            var position = pars.position;
-            if(defined(position)){
-                camera.flyTo({
-                    destination : Cartesian3.fromDegrees(position[0],position[1], 1000),
-                    orientation : {
-                        heading : CesiumMath.toRadians(200.0),
-                        pitch : CesiumMath.toRadians(-50.0)
-                    },
-                    duration : 5,
-                    easingFunction : EasingFunction.LINEAR_NONE,
-                    complete : function() {
-                        setTimeout(function() {
-                            that.osgbLayer = new OsgbLayer(pars);
-                        }, 1000);
-                    }
-                });
-            }
+            var deferred = when.defer();
+            camera.flyTo({
+                destination : Cartesian3.fromDegrees(position[0],position[1], 1000),
+                orientation : {
+                    heading : CesiumMath.toRadians(200.0),
+                    pitch : CesiumMath.toRadians(-50.0)
+                },
+                duration : 5,
+                easingFunction : EasingFunction.LINEAR_NONE,
+                complete : function(){
+                    setTimeout(function() {
+                        var layer = new OsgbLayer(pars);
+                        that.osgbLayer = layer;
+                        deferred.resolve(layer);
+                    }, 1000);
+                }
+            });
+            return deferred.promise;
         });
     };
     return Scene;

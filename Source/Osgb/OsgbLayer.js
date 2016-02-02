@@ -435,12 +435,12 @@ define([
      * @param globe {Globe}
      */
         OsgbLayer.prototype.update = function(vCameraPosition, matModelViewProjection,cullingVolume,commandList,isPicking,globe){
-            var cartographic = Cartographic.fromDegrees(this.lon,this.lat);
+            /*var cartographic = Cartographic.fromDegrees(this.lon,this.lat);
             this.height = globe.getHeight(cartographic) || 0;
             //this.height = 0;
             var position = Cartesian3.fromDegrees(this.lon,this.lat,this.height);
             var orientation = Transforms.headingPitchRollQuaternion(position, 0, 0, 0);
-            Matrix4.fromRotationTranslation(Matrix3.fromQuaternion(orientation), position, this._matModel);
+            Matrix4.fromRotationTranslation(Matrix3.fromQuaternion(orientation), position, this._matModel);*/
             var _this = this;
             if(!isPicking){
                 var traverseQueue = [];
@@ -555,10 +555,10 @@ define([
                 gl.uniform4f(this._program.uPixels,this._pixels[0],this._pixels[1],this._pixels[2],this._pixels[3]);
             }
         };
-        OsgbLayer.prototype.destroySelf = function(){
+        OsgbLayer.prototype.destroy = function(){
             var destroyCallBack = function(pageLod){
-                if(pageLod && pageLod.renderEntity){
-                    pageLod.renderEntity.destroy();
+                if(pageLod && pageLod._renderEntity){
+                    pageLod._renderEntity.destroy();
                 }
             };
             for(var i = 0,j = this._rootEntitys.length;i < j;i++){
@@ -634,7 +634,7 @@ define([
                         default : break;
                     }
                 }
-                var pPagedInfo = new PagedLODInfo();
+                var pPagedInfo = new PagedLOD();
                 pPagedInfo._rangeDataList = rangeDataList;
                 pPagedInfo._rangeList = rangeList;
                 pPagedInfo._boundingSphere = sphere;
@@ -660,10 +660,10 @@ define([
                 y = parseFloat(y);
                 z = parseFloat(z);
                 radius = parseFloat(radius);
-                radiusInv = radius * CARTESIAN_SCALE_INV;
+                //radiusInv = radius * CARTESIAN_SCALE_INV;
                 var vecCenter = new Cartesian4(x,y,z,1);
-                var v3 = new Cartesian4();
-                Matrix4.multiplyByVector(me.matModel,vecCenter,v4);
+                var v4 = new Cartesian4();
+                Matrix4.multiplyByVector(me._matModel,vecCenter,v4);
                 var res = new BoundingSphere();
                 res.center = new Cartesian3(v4.x,v4.y,v4.z);
                 res.radius = radius;

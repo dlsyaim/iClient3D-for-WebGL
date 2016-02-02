@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <title>添加Iserver地图服务</title>
+    <link href="../Build/Cesium/Widgets/widgets.css" rel="stylesheet">
+    <script type="text/javascript" src="./js/require.min.js" data-main="js/main"></script>
+    <style>
+        html, body, #cesiumContainer {
+            width: 100%; height: 100%; margin: 0; padding: 0; overflow: hidden;
+        }
+    </style>
+</head>
+<body>
+<div id="cesiumContainer"></div>
+<script>
+	function onload(Cesium) {
+		var viewer = new Cesium.Viewer('cesiumContainer',{
+			imageryProvider : new Cesium.SuperMapImageryProvider({
+				url : '//localhost:8090/iserver/services/map-china400/rest/maps/China'
+			})
+		});
+	}
+</script>
+</body>
+</html>

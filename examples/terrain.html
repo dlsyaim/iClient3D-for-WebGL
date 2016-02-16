@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
     <title>地形</title>
     <link href="../Build/Cesium/Widgets/widgets.css" rel="stylesheet">
-    <script src="../Build/Cesium/Cesium.js"></script>
+    <script type="text/javascript" src="./js/require.min.js" data-main="js/main"></script>
     <style>
         html, body, #cesiumContainer {
             width: 100%; height: 100%; margin: 0; padding: 0; overflow: hidden;
@@ -16,7 +16,8 @@
 <body>
 <div id="cesiumContainer"></div>
 <script>
-    var viewer = new Cesium.Viewer('cesiumContainer',{
+function onload(Cesium) {
+	var viewer = new Cesium.Viewer('cesiumContainer',{
         terrainProvider : new Cesium.CesiumTerrainProvider({
             url : "http://localhost:8090/Terrain",
             requestWaterMask : true,
@@ -35,6 +36,7 @@
         duration : 5,
         easingFunction : Cesium.EasingFunction.LINEAR_NONE
     });
+}
 </script>
 </body>
 </html>

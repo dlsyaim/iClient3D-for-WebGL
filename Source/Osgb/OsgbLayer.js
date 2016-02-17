@@ -381,6 +381,9 @@ define([
                     promise.then(function(buffer){
 
                         binaryDataParser(_this,entity,buffer,RenderEntityPagedLOD);
+
+                         var group = entity._doc.getElementsByTagName("Group" + entity._fileName)[0];
+                         groupParser(entity,group,_this,entity._pageLod);
                     },function(error){
                         entity._s3mLoadState = LOADSTATE.UNLOAD;
                     });
@@ -390,6 +393,44 @@ define([
         };
         OsgbLayer.prototype.loadRootEntity = function(rootEntity){
             var _this = this;
+/*
+            var s3mLoadState = rootEntity._s3mLoadState;
+            if(LOADSTATE.UNLOAD == s3mLoadState){
+                var server = this._servers[0];
+                var s3mUrl = server + rootEntity._filePath + rootEntity._fileName + '.s3m';
+                var promise = loadS3m(s3mUrl);
+                if(promise){
+                    promise.then(function(buffer){
+                        binaryDataParser(_this,rootEntity,buffer,RenderEntityPagedLOD);
+                    });
+                    rootEntity._s3mLoadState = LOADSTATE.LOADING;
+                }
+            }
+			else if(LOADSTATE.LOADED == s3mLoadState)
+			{
+				var xmlLoadState = rootEntity._xmlLoadState;
+				if(LOADSTATE.UNLOAD == xmlLoadState){
+					var server = this._servers[0];
+					var xmlUrl = server + rootEntity._filePath + rootEntity._fileName + '.xml';
+					var promise = loadRootXml(xmlUrl);
+					if(promise){
+						promise.then(function(doc){
+							rootEntity._doc = doc;
+							var group = doc.getElementsByTagName("Group"+rootEntity._fileName)[0];
+							if(group){
+								groupParser(rootEntity,group,_this);
+								rootEntity._xmlLoadState = LOADSTATE.LOADED;
+							}
+						},function(error){
+							rootEntity._xmlLoadState = LOADSTATE.UNLOAD;
+							console.log(err);
+						});
+						rootEntity._xmlLoadState = LOADSTATE.LOADING;
+					}
+				}				
+			}
+*/
+			
             var xmlLoadState = rootEntity._xmlLoadState;
             if(LOADSTATE.UNLOAD == xmlLoadState){
                 var server = this._servers[0];
@@ -424,6 +465,7 @@ define([
                     }
                 }
             }
+			
         };
     /**
      * 每一帧更新lod
@@ -489,9 +531,11 @@ define([
                                         newEntity._filePath = filePath;
                                         newEntity._fileName = fileName;
                                         newEntity._avgPix = pageLod._pix;
-                                        var group = newEntity._doc.getElementsByTagName("Group" + fileName)[0];
-                                        if(group){
-                                            groupParser(newEntity,group,_this,pageLod);
+                                        newEntity._pageLod = pageLod;
+                                       // var group = newEntity._doc.getElementsByTagName("Group" + fileName)[0];
+                                        //if(group)
+                                        {
+                                            //groupParser(newEntity,group,_this,pageLod);
                                             pageLod._entity = newEntity;
                                             loadQueue.enqueue(newEntity);
                                             pageLod._renderEntity && this._renderQueue.push(pageLod._renderEntity);

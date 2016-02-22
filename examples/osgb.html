@@ -19,7 +19,23 @@
 		function onload(Cesium) {
 			var viewer = new Cesium.Viewer('cesiumContainer');
 			var scene = viewer.scene;
-			scene.addOsbgLayerByScp('http://localhost:8090/iserver/services/3D-MaSai/rest/realspace/datas/compressed/config');
+            var widget = viewer.cesiumWidget;
+            try{
+                var promise = scene.addOsbgLayerByScp('http://localhost:8090/iserver/services/3D-masa/rest/realspace/datas/compressed/config');
+                Cesium.when(promise,function(){},function(e){
+                    if (widget._showRenderLoopErrors) {
+                        var title = 'An error occurred while rendering.  Rendering has stopped.';
+                        widget.showErrorPanel(title, undefined, e);
+                    }
+                });
+            }
+            catch(e){
+                if (widget._showRenderLoopErrors) {
+                    var title = 'An error occurred while rendering.  Rendering has stopped.';
+                    widget.showErrorPanel(title, undefined, e);
+                }
+            }
+
 		}
     </script>
 </body>

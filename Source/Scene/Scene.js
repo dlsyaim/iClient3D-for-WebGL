@@ -2340,9 +2340,9 @@ define([
             throw new DeveloperError('scp url is required!');
         }
         if(this.osgbLayer){
-         this.osgbLayer.destroy();
-         this.osgbLayer = undefined;
-         }
+            this.osgbLayer.destroy();
+            this.osgbLayer = undefined;
+        }
         var camera = this.camera;
         var that = this;
         return when(loadXml(url),function(doc){
@@ -2432,7 +2432,7 @@ define([
             };
             var deferred = when.defer();
             camera.flyTo({
-                destination : Cartesian3.fromDegrees(position[0],position[1], 1000),
+                destination : Cartesian3.fromDegrees(position[0],position[1], 1500),
                 orientation : {
                     heading : CesiumMath.toRadians(200.0),
                     pitch : CesiumMath.toRadians(-50.0)
@@ -2448,6 +2448,8 @@ define([
                 }
             });
             return deferred.promise;
+        },function(){
+            throw new DeveloperError('net error or the scp url error,please check the network and make sure the url is ok');
         });
     };
     return Scene;

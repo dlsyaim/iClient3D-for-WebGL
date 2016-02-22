@@ -318,7 +318,7 @@ color:#fff
 }
 }
 
-@media (max-width: 979px)
+@media (max-width: 979px){
 .nav-collapse .dropdown-menu::before, .nav-collapse .dropdown-menu::after {
 display: none;
 }

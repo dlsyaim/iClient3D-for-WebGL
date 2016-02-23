@@ -7,6 +7,10 @@ define([
 
     importScripts("./zlib.min.js");
 
+    function ab2str(buf) {
+        return String.fromCharCode.apply(null, new Uint16Array(buf));
+    }
+
     function osgbParser(parameters, transferableObjects) {
 
         var data = parameters.dataBuffer;
@@ -54,7 +58,24 @@ define([
 
             var vertexes = new Float32Array(data,nOffset,nVertexCount*(5+nSecondColorSize));
             nOffset = nOffset + nVertexCount*(5+nSecondColorSize)*4;
-            var pImageBuffer = new Uint8Array(data,nOffset,width*height/2);
+            var pImageBuffer = new Uint8Array(data,nOffset,width * height / 2);
+
+            var fCentre = null;
+            var strName = null;
+
+            if(version == '1')
+            {
+                nOffset = nOffset + size;
+                fCentre = new Float32Array(data,nOffset,5);
+
+                nOffset = nOffset + 4 * 5;
+                var nFileNameCount = new Uint32Array(data,nOffset,1);
+
+                nOffset = nOffset + 4;
+                var codeFileName = new Uint8Array(data,nOffset,nFileNameCount[0]);
+
+                strName = ab2str(codeFileName).split(".")[0];
+            }
 
             var obj = {
                 indexCount:nIndexCount,
@@ -62,7 +83,9 @@ define([
                 vertexData:vertexes,
                 nWidth:width,
                 nHeight:height,
-                imageData:  pImageBuffer
+                imageData:  pImageBuffer,
+                boundingsphere:fCentre,
+                strFileName:strName
             };
 
             arr[i] = obj;

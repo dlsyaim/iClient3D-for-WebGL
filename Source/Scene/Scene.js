@@ -2073,7 +2073,7 @@ define([
                 uniformState.updateFrustum(frustum);
 
                 if(this.osgbLayer && false){
-                    //保持投影矩阵和渲染osgb时的一致性，不得不在这里更新一下，这是糟糕的做法，以后务必修改！！！
+                    //保持投影矩阵和渲染osgb时的一致性，不得不在这里更新一下，这是糟糕的做法，以后务必修改！！�?
                     context.uniformState.updateFrustum(camera.frustum);
                 }
                 return SceneTransforms.drawingBufferToWgs84Coordinates(this, drawingBufferPosition, depth, result);

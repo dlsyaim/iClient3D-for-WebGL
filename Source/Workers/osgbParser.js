@@ -63,7 +63,7 @@ define([
             var fCentre = null;
             var strName = null;
 
-            if(version == '1')
+            if(version == 52)
             {
                 nOffset = nOffset + size;
                 fCentre = new Float32Array(data,nOffset,5);

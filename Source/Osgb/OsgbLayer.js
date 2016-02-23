@@ -312,6 +312,19 @@ define([
                 throw new DeveloperError('position is required to create create osgbLayer');
             }
             this._gl = gl;
+
+            this._withXML = options.withXML;
+
+            if(this._withXML == false)
+            {
+                OsgbLayer.prototype.update = OsgbLayer.prototype.updateWithoutXML;
+
+            }
+            else
+            {
+                OsgbLayer.prototype.update = OsgbLayer.prototype.updateWithXML;
+            }
+
             this._servers = [].concat(servers);
             this._urls = [].concat(urls);
             this._renderQueue = [];
@@ -382,8 +395,6 @@ define([
 
                         binaryDataParser(_this,entity,buffer,RenderEntityPagedLOD);
 
-                         var group = entity._doc.getElementsByTagName("Group" + entity._fileName)[0];
-                         groupParser(entity,group,_this,entity._pageLod);
                     },function(error){
                         entity._s3mLoadState = LOADSTATE.UNLOAD;
                     });
@@ -391,9 +402,10 @@ define([
                 }
             }
         };
+
+
         OsgbLayer.prototype.loadRootEntity = function(rootEntity){
             var _this = this;
-/*
             var s3mLoadState = rootEntity._s3mLoadState;
             if(LOADSTATE.UNLOAD == s3mLoadState){
                 var server = this._servers[0];
@@ -404,33 +416,13 @@ define([
                         binaryDataParser(_this,rootEntity,buffer,RenderEntityPagedLOD);
                     });
                     rootEntity._s3mLoadState = LOADSTATE.LOADING;
+                    rootEntity._xmlLoadState = LOADSTATE.LOADING;
                 }
             }
-			else if(LOADSTATE.LOADED == s3mLoadState)
-			{
-				var xmlLoadState = rootEntity._xmlLoadState;
-				if(LOADSTATE.UNLOAD == xmlLoadState){
-					var server = this._servers[0];
-					var xmlUrl = server + rootEntity._filePath + rootEntity._fileName + '.xml';
-					var promise = loadRootXml(xmlUrl);
-					if(promise){
-						promise.then(function(doc){
-							rootEntity._doc = doc;
-							var group = doc.getElementsByTagName("Group"+rootEntity._fileName)[0];
-							if(group){
-								groupParser(rootEntity,group,_this);
-								rootEntity._xmlLoadState = LOADSTATE.LOADED;
-							}
-						},function(error){
-							rootEntity._xmlLoadState = LOADSTATE.UNLOAD;
-							console.log(err);
-						});
-						rootEntity._xmlLoadState = LOADSTATE.LOADING;
-					}
-				}				
-			}
-*/
-			
+        };
+
+        OsgbLayer.prototype.loadRootEntityAndXML = function(rootEntity){
+            var _this = this;
             var xmlLoadState = rootEntity._xmlLoadState;
             if(LOADSTATE.UNLOAD == xmlLoadState){
                 var server = this._servers[0];
@@ -465,7 +457,6 @@ define([
                     }
                 }
             }
-			
         };
     /**
      * 每一帧更新lod
@@ -476,7 +467,7 @@ define([
      * @param isPicking {boolean} 是否处于picking模式
      * @param globe {Globe}
      */
-        OsgbLayer.prototype.update = function(vCameraPosition, matModelViewProjection,cullingVolume,commandList,isPicking,globe){
+        OsgbLayer.prototype.updateWithoutXML = function(vCameraPosition, matModelViewProjection,cullingVolume,commandList,isPicking,globe){
             /*var cartographic = Cartographic.fromDegrees(this.lon,this.lat);
             this.height = globe.getHeight(cartographic) || 0;
             //this.height = 0;
@@ -527,15 +518,15 @@ define([
                                         var newEntity = new Entity();
                                         var fileName = pageLod._rangeDataList;
                                         var filePath = entity._filePath;
-                                        newEntity._doc = entity._doc;
+                                        //newEntity._doc = entity._doc;
                                         newEntity._filePath = filePath;
                                         newEntity._fileName = fileName;
                                         newEntity._avgPix = pageLod._pix;
                                         newEntity._pageLod = pageLod;
-                                       // var group = newEntity._doc.getElementsByTagName("Group" + fileName)[0];
+                                        //var group = newEntity._doc.getElementsByTagName("Group" + fileName)[0];
                                         //if(group)
                                         {
-                                            //groupParser(newEntity,group,_this,pageLod);
+                                        //    groupParser(newEntity,group,_this,pageLod);
                                             pageLod._entity = newEntity;
                                             loadQueue.enqueue(newEntity);
                                             pageLod._renderEntity && this._renderQueue.push(pageLod._renderEntity);
@@ -567,6 +558,98 @@ define([
                 commandList.push(this._renderQueue[i]._drawCommand);
             }
         };
+
+        OsgbLayer.prototype.updateWithXML = function(vCameraPosition, matModelViewProjection,cullingVolume,commandList,isPicking,globe){
+            /*var cartographic = Cartographic.fromDegrees(this.lon,this.lat);
+             this.height = globe.getHeight(cartographic) || 0;
+             //this.height = 0;
+             var position = Cartesian3.fromDegrees(this.lon,this.lat,this.height);
+             var orientation = Transforms.headingPitchRollQuaternion(position, 0, 0, 0);
+             Matrix4.fromRotationTranslation(Matrix3.fromQuaternion(orientation), position, this._matModel);*/
+            var _this = this;
+            if(!isPicking){
+                var traverseQueue = [];
+                var loadQueue = new Queue();
+                this._renderQueue.length = 0;
+                var deleteQueue = new Queue();
+                for(var i = 0,j = this._rootEntitys.length;i < j;i++){
+                    var rootEntity = this._rootEntitys[i];
+                    this.loadRootEntityAndXML(rootEntity);
+                    rootEntity._ready && traverseQueue.push(rootEntity);
+                }
+                var entity;
+                while(entity = traverseQueue.pop()){
+                    for(var i = 0,j = entity._childrenPageLod.length;i < j;i++){
+                        var pageLod = entity._childrenPageLod[i];
+                        if(entity._isLastNode){
+                            pageLod._renderEntity && this._renderQueue.push(pageLod._renderEntity);
+                        }
+                        else{
+                            var intersect = cullingVolume.computeVisibility(pageLod._boundingSphere);
+                            if(intersect === Intersect.OUTSIDE){
+                                pageLod._renderEntity && this._renderQueue.push(pageLod._renderEntity);
+                                if(pageLod._entity){
+                                    deleteQueue.enqueue(pageLod);
+                                    //pageLod._entity = null;
+                                }
+                            }
+                            else{
+                                pageLod.calcPixFromCam(vCameraPosition,this._gl);
+                                if(!pageLod._isLessLodDis){
+                                    if(pageLod._entity){
+                                        var s3mLoadState = pageLod._entity._s3mLoadState;
+                                        if(s3mLoadState == LOADSTATE.LOADED){
+                                            traverseQueue.push(pageLod._entity);
+                                        }
+                                        else{
+                                            pageLod._renderEntity && this._renderQueue.push(pageLod._renderEntity);
+                                            loadQueue.enqueue(pageLod._entity);
+                                        }
+                                    }
+                                    else{
+                                        var newEntity = new Entity();
+                                        var fileName = pageLod._rangeDataList;
+                                        var filePath = entity._filePath;
+                                        newEntity._doc = entity._doc;
+                                        newEntity._filePath = filePath;
+                                        newEntity._fileName = fileName;
+                                        newEntity._avgPix = pageLod._pix;
+
+                                        var group = newEntity._doc.getElementsByTagName("Group" + fileName)[0];
+                                        if(group){
+                                            groupParser(newEntity,group,_this,pageLod);
+                                            pageLod._entity = newEntity;
+                                            loadQueue.enqueue(newEntity);
+                                            pageLod._renderEntity && this._renderQueue.push(pageLod._renderEntity);
+                                        }
+                                    }
+                                }
+                                else{
+                                    pageLod._renderEntity && this._renderQueue.push(pageLod._renderEntity);
+                                    if(pageLod._entity){
+                                        deleteQueue.enqueue(pageLod);
+                                        //pageLod._entity = null;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                loadQueue.sort(function(aEntity,bEntity){
+                    return bEntity._avgPix - aEntity._avgPix;
+                });
+                var loadEntity;
+                while(loadEntity = loadQueue.dequeue()){
+                    this.loadEntity(loadEntity);
+                }
+                var cacheCount = this._cacheEntityCount || 0;
+                releaseResource(deleteQueue,cacheCount);
+            }
+            for(var i = 0,j = this._renderQueue.length;i < j;i++){
+                commandList.push(this._renderQueue[i]._drawCommand);
+            }
+        };
+
         OsgbLayer.prototype.stopRequest = function(){
             return;
             for(var i = 0,j = this.httpPool.length;i < j;i++){
@@ -628,6 +711,7 @@ define([
                 }
             }
         }
+
         function pageLodParser(pageLod,me,pEntity,pageInfo){
             if(pageLod.children.length == 0){
                 pEntity._isLastNode = true;//最后一个节点
@@ -657,6 +741,7 @@ define([
                 pEntity._childrenPageLod.push(pPagedInfo);
             }
         }
+
         function pageLodParserIE(pageLod,me,pEntity,pageInfo){
             if(0 == pageLod.childElementCount){//最后一个节点
                 pEntity._isLastNode = true;//最后一个节点
@@ -731,6 +816,7 @@ define([
                 if(result.result)
                 {
                     pEntity._s3mLoadState = LOADSTATE.LOADED;
+                    pEntity._xmlLoadState = LOADSTATE.LOADED;
 
                     osglayer._version = result.version;
                     var gl = osglayer._gl;
@@ -740,6 +826,47 @@ define([
                     }
 
                     var nPageCount = result.number;
+
+                    if(osglayer._withXML == false)
+                    {
+                        if(nPageCount == 0)
+                        {
+                            pEntity._isLastNode = true;//最后一个节点
+                            pEntity._pageLod._isLast = true;
+                            var pPagedInfo = new PagedLOD();
+                            pPagedInfo._boundingSphere = undefined;
+                            pEntity._childrenPageLod.push(pPagedInfo);
+                        }
+                        else
+                        {
+                            for(var i = 0;i < nPageCount; i++){
+                                var pageLod = result.vbo[i];
+
+                                var rangeDataList = pageLod.strFileName;
+
+                                var x = pageLod.boundingsphere[0];
+                                var y = pageLod.boundingsphere[1];
+                                var z = pageLod.boundingsphere[2];
+                                var radius = pageLod.boundingsphere[3];
+                                var rangeList = pageLod.boundingsphere[4];
+
+                                var pPagedInfo = new PagedLOD();
+
+                                pPagedInfo._rangeDataList = rangeDataList;
+                                pPagedInfo._rangeList = rangeList;
+
+                                var vecCenter = new Cartesian4(x,y,z,1);
+                                pPagedInfo._boundingSphere = new BoundingSphere();
+
+                                var v4 = new Cartesian4();
+                                Matrix4.multiplyByVector(osglayer._matModel,vecCenter,v4);
+                                pPagedInfo._boundingSphere.center = new Cartesian3(v4.x,v4.y,v4.z);
+                                pPagedInfo._boundingSphere.radius = parseFloat(radius);
+                                pEntity._childrenPageLod.push(pPagedInfo);
+                            }
+                        }
+                    }
+
                     if(pEntity._childrenPageLod.length == nPageCount)
                     {
                         for(var i = 0;i < nPageCount;i++)

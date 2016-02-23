@@ -2335,7 +2335,7 @@ define([
      * @example
      * scene.addOsbgLayerByScp('http://localhost:8090/iserver/services/3D-zj/rest/realspace/datas/zj/config');
      */
-    Scene.prototype.addOsbgLayerByScp = function(url){
+    Scene.prototype.addOsbgLayerByScp = function(url,withXML){
         if(!defined(url)){
             throw new DeveloperError('scp url is required!');
         }
@@ -2428,7 +2428,8 @@ define([
                 gl : gl,
                 servers : servers,
                 urls : urls,
-                position : position
+                position : position,
+                withXML:withXML?withXML:false
             };
             var deferred = when.defer();
             camera.flyTo({

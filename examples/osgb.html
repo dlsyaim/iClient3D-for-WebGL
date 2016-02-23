@@ -21,7 +21,7 @@
 			var scene = viewer.scene;
             var widget = viewer.cesiumWidget;
             try{
-                var promise = scene.addOsbgLayerByScp('http://localhost:8090/iserver/services/3D-masa/rest/realspace/datas/compressed/config');
+                var promise = scene.addOsbgLayerByScp('http://localhost:8090/iserver/services/3D-masa/rest/realspace/datas/compressed/config',true);
                 Cesium.when(promise,function(){},function(e){
                     if (widget._showRenderLoopErrors) {
                         var title = 'An error occurred while rendering.  Rendering has stopped.';

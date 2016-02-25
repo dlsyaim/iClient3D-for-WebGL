@@ -1,5 +1,11 @@
 Change Log
 ==========
+### b1.1 - 2016-2-23
+*Modify
+    * 修改鼠标中键事件：
+        this._maximumRotateRate = 1.77;改为this._maximumRotateRate = 0.618;
+        function rotate3D()的camera.rotateUp(deltaTheta);改为camera.rotateUp(-deltaTheta);
+        function tilt3DOnTerrain()的if (dot < 0.0) {改为if (dot > 0.0)
 ### b1.0 - 2016-01-22
 * Added
     * 增加Source/Osgb/OsgbLayer.js模块

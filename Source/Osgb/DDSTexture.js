@@ -12,7 +12,7 @@ define([
      * @param imageBuffer {Array} 纹理数据
      * @constructor
      */
-    var DDSTexture = function(gl,width,height,imageBuffer){
+    var DDSTexture = function(gl,width,height,imageBuffer,isPC){
         this._gl = gl;
         this._width = width;
         this._height = height;
@@ -21,6 +21,7 @@ define([
         this.vendorPrefixes = ["", "WEBKIT_", "MOZ_"];
         this.texture = null;
         this.ready = false;
+        this.isPC = isPC;
         this.initTexture();
     };
     /**
@@ -47,12 +48,12 @@ define([
         var texWidth = this._width;
         var texHeight = this._height;
         var imageBuffer = this._imageBuffer;
-        if(FeatureDetection.isWindows){
+        if(this.isPC){
             gl.compressedTexImage2D(gl.TEXTURE_2D, 0, internalFormat, texWidth, texHeight, 0, imageBuffer);
         }
         else{
-            var rgb565Data = this.dxtToRgb565(arrayBuffer, 0, m_nWidth, m_nHeight);
-            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, texWidth, texHeight, 0, gl.RGB, gl.UNSIGNED_SHORT_5_6_5, rgb565Data);
+            //var rgb565Data = this.dxtToRgb565(imageBuffer, 0, texWidth, texHeight);
+            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, texWidth, texHeight, 0, gl.RGB, gl.UNSIGNED_SHORT_5_6_5, imageBuffer);
         }
 
         //gl.generateMipmap(gl.TEXTURE_2D);

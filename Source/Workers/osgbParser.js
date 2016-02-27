@@ -103,6 +103,14 @@ define([
         }
         var version = header[3];
 
+        if(version == 51)
+        {
+            var dataZip = new Uint8Array(data,4);
+
+            var deflate = new Zlib.Deflate(dataZip);
+            data = deflate.compress().buffer;
+        }
+
         var aCount =  new Uint32Array(data,0,2);
         var nPageCount = aCount[1];
         var ab =  new Uint32Array(data,0,2+nPageCount*6);
@@ -142,7 +150,7 @@ define([
             var fCentre = null;
             var strName = null;
 
-            if(version == '1')
+            if(version == '51')
             {
                 nOffset = nOffset + size;
                 fCentre = new Float32Array(data,nOffset,5);

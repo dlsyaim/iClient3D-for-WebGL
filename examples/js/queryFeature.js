@@ -7,7 +7,7 @@ function onload(Cesium) {
         name : 'selected'
     });
     try{
-        var promise = scene.addOsbgLayerByScp('http://localhost:8090/iserver/services/3D-masaidth/rest/realspace/datas/masaidantihua/config');
+        var promise = scene.addOsbgLayerByScp('http://localhost:8090/iserver/services/3D-masaidth/rest/realspace/datas/masaidantihua/config',true);
         Cesium.when(promise,function(layer){
         },function(e){
             if (widget._showRenderLoopErrors) {

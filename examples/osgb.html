@@ -21,7 +21,7 @@
 			var scene = viewer.scene;
             var widget = viewer.cesiumWidget;
             try{
-                var promise = scene.addOsbgLayerByScp('http://192.168.15.33:8090/iserver/services/3D-scp/rest/realspace/datas/Data/config');
+                var promise = scene.addOsbgLayerByScp('http://localhost:8090/iserver/services/3D-MaSai/rest/realspace/datas/compressed/config',true);
                 //var promise = scene.addOsbgLayerByScp('http://localhost:8090/iserver/services/3D-scp/rest/realspace/datas/compressed/config');
                 Cesium.when(promise,function(){},function(e){
                     if (widget._showRenderLoopErrors) {

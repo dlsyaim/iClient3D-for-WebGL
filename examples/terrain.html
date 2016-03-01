@@ -22,6 +22,16 @@ function onload(Cesium) {
             url : "http://localhost:8090/Terrain",
             requestWaterMask : true,
             requestVertexNormals : true
+        })  ,
+        imageryProvider : new Cesium.WebMapTileServiceImageryProvider({
+            url : 'http://[subdomain].tianditu.com/img_w/wmts',
+            layer : 'img',
+            style : 'default',
+            format : 'tiles',
+            tileMatrixSetID : 'w',
+            credit : new Cesium.Credit('天地图全球影像服务'),
+            subdomains : ['t0','t1','t2','t3','t4','t5','t6','t7'],
+            maximumLevel : 18
         })
     });
 

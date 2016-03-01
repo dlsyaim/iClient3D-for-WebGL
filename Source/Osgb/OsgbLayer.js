@@ -847,7 +847,7 @@ define([
 
                     if(osglayer._withXML == false)
                     {
-                        if(nPageCount == 0)
+                        if(result.vbo[0].strFileName == "")
                         {
                             pEntity._isLastNode = true;//最后一个节点
                             pEntity._pageLod._isLast = true;

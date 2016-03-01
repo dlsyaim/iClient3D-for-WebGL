@@ -88,12 +88,13 @@ define([
         var isPc = parameters.isPc;
 
 //        var content = new Uint8Array(data);
+//        content[3] = 0;
 //
 //        var deflate = new Zlib.Deflate(content);
 //        var compressed = deflate.compress();
 //
-//        var inflate = new Zlib.Inflate(compressed);
-//        data = inflate.decompress().buffer;
+//        var inflate = new Zlib.Inflate(content);
+//        var data2 = inflate.decompress();
 
         var header = new Uint8Array(data);
         if (header[0] != 115 || header[1] != 51 || header[2] != 109) {
@@ -103,12 +104,14 @@ define([
         }
         var version = header[3];
 
-        if(version == 51)
+        if(version == 0)
         {
+            //var dataBB = new Uint8Array(parameters.dataBuffer,4);
             var dataZip = new Uint8Array(data,4);
 
-            var deflate = new Zlib.Deflate(dataZip);
-            data = deflate.compress().buffer;
+
+            var inflate = new Zlib.Inflate(dataZip);
+            data = inflate.decompress().buffer;
         }
 
         var aCount =  new Uint32Array(data,0,2);
@@ -150,7 +153,7 @@ define([
             var fCentre = null;
             var strName = null;
 
-            if(version == '51')
+            if(version == 0)
             {
                 nOffset = nOffset + size;
                 fCentre = new Float32Array(data,nOffset,5);

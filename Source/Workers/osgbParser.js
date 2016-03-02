@@ -184,7 +184,7 @@ define([
         return {
             result:true,
             version:version,
-            number: nPageCount,
+            number: arr.length,
             vbo: arr
         };
     }

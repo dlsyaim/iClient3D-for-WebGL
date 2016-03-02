@@ -178,7 +178,7 @@ define([
                 strFileName:strName
             };
 
-            arr[i] = obj;
+            arr.push(obj);
         }
 
         return {

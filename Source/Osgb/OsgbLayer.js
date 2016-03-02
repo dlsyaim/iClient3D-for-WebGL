@@ -859,6 +859,8 @@ define([
                         {
                             for(var i = 0;i < nPageCount; i++){
                                 var pageLod = result.vbo[i];
+                                if(pageLod == null)
+                                    continue;
 
                                 var rangeDataList = pageLod.strFileName;
 

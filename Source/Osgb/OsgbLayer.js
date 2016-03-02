@@ -743,7 +743,10 @@ define([
             var y = parseFloat(boundSphere.children[1].textContent);
             var z = parseFloat(boundSphere.children[2].textContent);
             var radius = boundSphere.children[3].textContent;
-            var rangeList = pageLod.children[2].textContent;
+            var rangeList = parseFloat(pageLod.children[2].textContent);
+
+            if(rangeList <0.0000001 && rangeList >-0.0000001)
+                return;
             var pPagedInfo = new PagedLOD();
             pPagedInfo._rangeDataList = rangeDataList;
             pPagedInfo._rangeList = rangeList;
@@ -774,11 +777,15 @@ define([
                 var name = obj.tagName;
                 switch(name){
                     case 'RangeDataList' : rangeDataList = obj.textContent;break;
-                    case 'RangeList' : rangeList = obj.textContent;break;
+                    case 'RangeList' : rangeList = parseFloat(obj.textContent);break;
                     case 'BoundingSphere' : sphere = boundingSphereParserIE(obj,me);break;
                     default : break;
                 }
             }
+
+            if(rangeList <0.0000001 && rangeList >-0.0000001)
+                return;
+
             var pPagedInfo = new PagedLOD();
             pPagedInfo._rangeDataList = rangeDataList;
             pPagedInfo._rangeList = rangeList;

@@ -12,7 +12,7 @@ define([
      * @param imageBuffer {Array} 纹理数据
      * @constructor
      */
-    var DDSTexture = function(gl,width,height,imageBuffer,isPC){
+    var DDSTexture = function(id,gl,width,height,imageBuffer,isPC){
         this._gl = gl;
         this._width = width;
         this._height = height;
@@ -22,6 +22,7 @@ define([
         this.texture = null;
         this.ready = false;
         this.isPC = isPC;
+        this.id = id;
         this.initTexture();
     };
     /**
@@ -147,6 +148,7 @@ define([
         this._gl.deleteTexture(this.texture);
         this.texture = null;
         this.ready = false;
+        this.id = 0;
     };
     /**
      * 激活纹理单元

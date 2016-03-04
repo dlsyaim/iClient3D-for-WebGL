@@ -6,6 +6,7 @@ define([
     '../Core/BoundingSphere',
     '../Core/Cartesian3',
     './DDSTexture',
+    './DDSTextureManager',
     '../Core/Matrix4',
     '../Core/Math',
     '../Core/Matrix3',
@@ -27,7 +28,7 @@ define([
     '../Core/DeveloperError',
     '../Core/Cartographic' ,
     '../Core/TaskProcessor'
-    ],function(defined,BoundingSphere,Cartesian3,DDSTexture,Matrix4,CesiumMath,Matrix3,Quaternion,Cartesian4,Transforms,RenderState,DepthFunction,when,DrawCommand,Pass,loadXML,loadArrayBuffer,throttleRequestByServer,Intersect,Uri,defineProperties,Queue,DeveloperError,Cartographic,TaskProcessor){
+    ],function(defined,BoundingSphere,Cartesian3,DDSTexture,DDSTextureManager,Matrix4,CesiumMath,Matrix3,Quaternion,Cartesian4,Transforms,RenderState,DepthFunction,when,DrawCommand,Pass,loadXML,loadArrayBuffer,throttleRequestByServer,Intersect,Uri,defineProperties,Queue,DeveloperError,Cartographic,TaskProcessor){
         "use strict";
     var RESOLUTION = {
         LOW : 0,
@@ -272,7 +273,7 @@ define([
      * destroy resource
      */
     RenderEntityPagedLOD.prototype.destroy = function(){
-        this._texture.destroy();
+        DDSTextureManager.DestroyTexture(this._texture.id);
         this._gl.deleteBuffer(this._ibo);
         this._ibo = null;
         this._gl.deleteBuffer(this._vbo);
@@ -892,50 +893,95 @@ define([
                                 pEntity._childrenPageLod.push(pPagedInfo);
                             }
                         }
-                    }
 
-                    if(pEntity._childrenPageLod.length == nPageCount)
-                    {
-                        for(var i = 0;i < nPageCount;i++)
+                        if(pEntity._childrenPageLod.length == nPageCount)
                         {
-                            var pageLod = pEntity._childrenPageLod[i];
+                            for(var i = 0;i < nPageCount;i++)
+                            {
+                                var pageLod = pEntity._childrenPageLod[i];
 
-                            var vbo = result.vbo[i];
-                            var nIndexCount = vbo.indexCount;
-                            if(nIndexCount == 0){
-                                console.log('nindexcount == 0');
-                                pageLod._rangeList = Infinity;//表示这块区域下面没有数据了，是一块无效区域,无需再继续往下遍历
-                                continue;
+                                var vbo = result.vbo[i];
+                                var nIndexCount = vbo.indexCount;
+                                if(nIndexCount == 0){
+                                    console.log('nindexcount == 0');
+                                    pageLod._rangeList = Infinity;//表示这块区域下面没有数据了，是一块无效区域,无需再继续往下遍历
+                                    continue;
+                                }
+
+                                var indexes = vbo.indexData;
+                                var vertexes = vbo.vertexData;
+
+                                var imgCode = vbo.imgCode;
+                                var imgObj = result.textureManager[imgCode];
+
+                                var texture = DDSTextureManager.CreateTexture(imgCode,gl,imgObj.width, imgObj.height, imgObj.pImageBuffer,isPc);
+
+                                var renderEntity = new RenderEntityPagedLOD({
+                                    gl : gl,
+                                    texture : texture,
+                                    indexes : indexes,
+                                    vertexes : vertexes,
+                                    indexCount : nIndexCount,
+                                    version : result.version,
+                                    size : result.version == 50 ? 9 : 5
+                                });
+                                renderEntity._drawCommand = new DrawCommand({
+                                    boundingVolume : pageLod._boundingSphere,
+                                    pass : Pass.OSGB,
+                                    owner : renderEntity
+                                });
+                                pageLod._renderEntity = renderEntity;
                             }
 
-                            var indexes = vbo.indexData;
-                            var vertexes = vbo.vertexData;
-
-                            var width = vbo.nWidth;
-                            var height = vbo.nHeight;
-                            var pImageBuffer = vbo.imageData;
-                            var texture = new DDSTexture(gl,width, height, pImageBuffer,isPc);
-
-                            var renderEntity = new RenderEntityPagedLOD({
-                                gl : gl,
-                                texture : texture,
-                                indexes : indexes,
-                                vertexes : vertexes,
-                                indexCount : nIndexCount,
-                                version : result.version,
-                                size : result.version == 53 ? 9 : 5
-                            });
-                            renderEntity._drawCommand = new DrawCommand({
-                                boundingVolume : pageLod._boundingSphere,
-                                pass : Pass.OSGB,
-                                owner : renderEntity
-                            });
-                            pageLod._renderEntity = renderEntity;
+                            pEntity._ready = true;
                         }
-
-                        pEntity._ready = true;
                     }
+                    else
+                    {
+                        if(pEntity._childrenPageLod.length == nPageCount)
+                        {
+                            for(var i = 0;i < nPageCount;i++)
+                            {
+                                var pageLod = pEntity._childrenPageLod[i];
 
+                                var vbo = result.vbo[i];
+                                var nIndexCount = vbo.indexCount;
+                                if(nIndexCount == 0){
+                                    console.log('nindexcount == 0');
+                                    pageLod._rangeList = Infinity;//表示这块区域下面没有数据了，是一块无效区域,无需再继续往下遍历
+                                    continue;
+                                }
+
+                                var indexes = vbo.indexData;
+                                var vertexes = vbo.vertexData;
+
+                                var width = vbo.nWidth;
+                                var height = vbo.nHeight;
+                                var pImageBuffer = vbo.imageData;
+                                //var texture = new DDSTexture(gl,width, height, pImageBuffer,isPc);
+                                var strName = pEntity._childrenPageLod[i]._rangeDataList;
+                                var texture = DDSTextureManager.CreateTexture(strName,gl,width, height, pImageBuffer,isPc);
+
+                                var renderEntity = new RenderEntityPagedLOD({
+                                    gl : gl,
+                                    texture : texture,
+                                    indexes : indexes,
+                                    vertexes : vertexes,
+                                    indexCount : nIndexCount,
+                                    version : result.version,
+                                    size : result.version == 53 ? 9 : 5
+                                });
+                                renderEntity._drawCommand = new DrawCommand({
+                                    boundingVolume : pageLod._boundingSphere,
+                                    pass : Pass.OSGB,
+                                    owner : renderEntity
+                                });
+                                pageLod._renderEntity = renderEntity;
+                            }
+
+                            pEntity._ready = true;
+                        }
+                    }
                 }
                 else
                 {

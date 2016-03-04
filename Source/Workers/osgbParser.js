@@ -104,89 +104,177 @@ define([
         }
         var version = header[3];
 
-        if(version == 0)
+        if(49 == version || 50 == version )
         {
-            //var dataBB = new Uint8Array(parameters.dataBuffer,4);
             var dataZip = new Uint8Array(data,4);
-
 
             var inflate = new Zlib.Inflate(dataZip);
             data = inflate.decompress().buffer;
-        }
 
-        var aCount =  new Uint32Array(data,0,2);
-        var nPageCount = aCount[1];
-        var ab =  new Uint32Array(data,0,2+nPageCount*6);
+            var aCount =  new Uint32Array(data,0,2);
+            var nPageCount = aCount[1];
+            var ab =  new Uint32Array(data,0,2+nPageCount*4);
 
-        var arr = [];
+            var arr = [];
+            var nOffset = 0;
+            var arrImage = new Array;
+            for(var i = 0;i < nPageCount;i++){
+                var nBeginPos = i*4+2;
+                nOffset = ab[nBeginPos];
+                var nIndexCount = ab[nBeginPos+1];
+                var nVertexCount = ab[nBeginPos+2];
+                var nImageCode = ab[nBeginPos+3];
 
-        for(var i = 0;i < nPageCount;i++){
-            var nBeginPos = i*6+2;
-            var nOffset = ab[nBeginPos];
-            var nIndexCount = ab[nBeginPos+1];
-            var nVertexCount = ab[nBeginPos+2];
-            var width = ab[nBeginPos+3];
-            var height = ab[nBeginPos+4];
-            var size = ab[nBeginPos+5];
-            if(nIndexCount == 0){
-                continue;
-            }
-            var indexes = new Uint16Array(data,nOffset,nIndexCount);
-            nOffset = nOffset + nIndexCount * 2;
-            if(nIndexCount%2 == 1)
-                nOffset += 2;
-            var nSecondColorSize = 0;
-            if(53 == version)
-                nSecondColorSize = 4;
+                if(nIndexCount == 0){
+                    continue;
+                }
+                var indexes = new Uint16Array(data,nOffset,nIndexCount);
+                nOffset = nOffset + nIndexCount * 2;
+                if(nIndexCount%2 == 1)
+                    nOffset += 2;
 
-            var vertexes = new Float32Array(data,nOffset,nVertexCount*(5+nSecondColorSize));
-            nOffset = nOffset + nVertexCount*(5+nSecondColorSize)*4;
-            var pImageBuffer;
-            if(isPc){
-                pImageBuffer = new Uint8Array(data,nOffset,width*height/2);
-            }
-            else{
-                pImageBuffer = new Uint16Array(data,nOffset,width*height/4);
-                pImageBuffer = dxtToRgb565(pImageBuffer, 0, width, height);
-            }
+                var nSecondColorSize = 0;
+                if(50 == version)
+                    nSecondColorSize = 4;
 
-            var fCentre = null;
-            var strName = null;
+                var vertexes = new Float32Array(data,nOffset,nVertexCount*(5+nSecondColorSize));
+                nOffset = nOffset + nVertexCount*(5+nSecondColorSize)*4;
 
-            if(version == 0)
-            {
-                nOffset = nOffset + size;
+                var fCentre = null;
+                var strName = null;
+
                 fCentre = new Float32Array(data,nOffset,5);
+                nOffset += 4 * 5;
 
-                nOffset = nOffset + 4 * 5;
                 var nFileNameCount = new Uint32Array(data,nOffset,1);
+                nOffset += 4;
 
-                nOffset = nOffset + 4;
                 var codeFileName = new Uint8Array(data,nOffset,nFileNameCount[0]);
-
                 strName = ab2str(codeFileName).split(".")[0];
+                var nFill = nFileNameCount[0]%4;
+                if(nFill)
+                    nFill = 4-nFill;
+
+                nOffset += nFileNameCount[0] + nFill;
+
+                var obj = {
+                    indexCount:nIndexCount,
+                    indexData:indexes,
+                    vertexData:vertexes,
+                    imgCode:nImageCode,
+                    boundingsphere:fCentre,
+                    strFileName:strName
+                };
+
+                arr.push(obj);
             }
 
-            var obj = {
-                indexCount:nIndexCount,
-                indexData:indexes,
-                vertexData:vertexes,
-                nWidth:width,
-                nHeight:height,
-                imageData:  pImageBuffer,
-                boundingsphere:fCentre,
-                strFileName:strName
+            var imgHeader = new Uint8Array(data,nOffset,4);
+            nOffset += 4;
+
+            if(imgHeader[0] == 105 && imgHeader[1] == 109 && imgHeader[2] == 103 && imgHeader[3] == 49)
+            {
+                var nImageCount =  new Uint32Array(data,nOffset,1);
+                nOffset += 4;
+
+                nImageCount = nImageCount[0];
+
+                for(var i=0;i<nImageCount;i++)
+                {
+                    var imgInfo = new Uint32Array(data,nOffset,4);
+                    nOffset += 16;
+
+                    var width = imgInfo[1];
+                    var height = imgInfo[2];
+
+                    var pImageBuffer;
+                    if(isPc){
+                        pImageBuffer = new Uint8Array(data,nOffset,width*height/2);
+                    }
+                    else{
+                        pImageBuffer = new Uint16Array(data,nOffset,width*height/4);
+                        pImageBuffer = dxtToRgb565(pImageBuffer, 0, width, height);
+                    }
+                    nOffset += width*height/2;
+
+                    var obj = {
+                        width:imgInfo[1],
+                        height:imgInfo[2],
+                        compressType:imgInfo[3],
+                        pImageBuffer:  pImageBuffer
+                    };
+
+                    arrImage[imgInfo[0]] = obj;
+                }
+            }
+
+            return {
+                result:true,
+                version:version,
+                number: arr.length,
+                vbo: arr,
+                textureManager:arrImage
             };
-
-            arr.push(obj);
         }
+        else
+        {
+            var aCount =  new Uint32Array(data,0,2);
+            var nPageCount = aCount[1];
+            var ab =  new Uint32Array(data,0,2+nPageCount*6);
 
-        return {
-            result:true,
-            version:version,
-            number: arr.length,
-            vbo: arr
-        };
+            var arr = [];
+
+            for(var i = 0;i < nPageCount;i++){
+                var nBeginPos = i*6+2;
+                var nOffset = ab[nBeginPos];
+                var nIndexCount = ab[nBeginPos+1];
+                var nVertexCount = ab[nBeginPos+2];
+                var width = ab[nBeginPos+3];
+                var height = ab[nBeginPos+4];
+                var size = ab[nBeginPos+5];
+                if(nIndexCount == 0){
+                    continue;
+                }
+                var indexes = new Uint16Array(data,nOffset,nIndexCount);
+                nOffset = nOffset + nIndexCount * 2;
+                if(nIndexCount%2 == 1)
+                    nOffset += 2;
+                var nSecondColorSize = 0;
+                if(53 == version)
+                    nSecondColorSize = 4;
+
+                var vertexes = new Float32Array(data,nOffset,nVertexCount*(5+nSecondColorSize));
+                nOffset = nOffset + nVertexCount*(5+nSecondColorSize)*4;
+                var pImageBuffer;
+                if(isPc){
+                    pImageBuffer = new Uint8Array(data,nOffset,width*height/2);
+                }
+                else{
+                    pImageBuffer = new Uint16Array(data,nOffset,width*height/4);
+                    pImageBuffer = dxtToRgb565(pImageBuffer, 0, width, height);
+                }
+
+                var obj = {
+                    indexCount:nIndexCount,
+                    indexData:indexes,
+                    vertexData:vertexes,
+                    nWidth:width,
+                    nHeight:height,
+                    imageData:  pImageBuffer,
+                    boundingsphere:fCentre,
+                    strFileName:strName
+                };
+
+                arr.push(obj);
+            }
+
+            return {
+                result:true,
+                version:version,
+                number: arr.length,
+                vbo: arr
+            };
+        }
     }
 
     return createTaskProcessorWorker(osgbParser);

@@ -143,9 +143,6 @@ define([
             if(pageLod._entity){
                 pageLod._entity.traverse(callback);
             }
-            else{
-                return;
-            }
         }
     };
     /**
@@ -567,7 +564,7 @@ define([
             while(loadEntity = loadQueue.dequeue()){
                 this.loadEntity(loadEntity);
             }
-            var cacheCount = this._cacheEntityCount || 0;
+            var cacheCount = 0;//this._cacheEntityCount || 0;
             releaseResource(deleteQueue,cacheCount);
         }
         for(var i = 0,j = this._renderQueue.length;i < j;i++){

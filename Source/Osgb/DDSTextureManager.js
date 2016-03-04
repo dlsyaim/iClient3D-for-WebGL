@@ -33,6 +33,8 @@ define([
         else
         {
             origTex = new DDSTexture(id,gl,width, height, imageBuffer,isPC);
+            g_TextureManager.refCounts[id] = 1;
+            g_TextureManager.textures[id] = origTex;
         }
         return origTex;
     };
